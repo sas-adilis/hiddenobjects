@@ -1,0 +1,16 @@
+{
+    "name": "adilis/hiddenobjects",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Adilis\\Hiddenobjects\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "sas-adilis",
+            "email": "contact@adilis.fr"
+        }
+    ],
+    "require": {}
+}

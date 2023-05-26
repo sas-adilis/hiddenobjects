@@ -520,11 +520,6 @@ class ModuleHiddenObjects extends \Module implements ModuleHiddenObjectsInterfac
         ];
     }
 
-    public function getTable(): string
-    {
-        return '';
-    }
-
     public function getLangTable(): string
     {
         return $this->getTable().'_lang';

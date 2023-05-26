@@ -84,9 +84,6 @@ class ModuleHiddenObjects extends \Module
 
     public function install(): bool
     {
-
-        require_once _PS_MODULE_DIR_ . $this->module_name . '/sql/install.php';
-
         \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_VERSION', $this->version);
         \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_SELECTOR', implode(', ', $this->jquery_selectors));
         \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_DISPLAY', 'front');

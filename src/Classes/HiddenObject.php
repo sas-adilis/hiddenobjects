@@ -17,6 +17,7 @@ namespace Adilis\HiddenObjects\Classes;
 
 class HiddenObject extends \ObjectModel
 {
+
     public $id_shop;
     public $name;
     public $message_end;

@@ -15,7 +15,6 @@ namespace Adilis\HiddenObjects\Controllers\Admin;
 use Adilis\HiddenObjects\Classes\HiddenObject;
 use Adilis\HiddenObjects\Classes\HOTools;
 use Adilis\HiddenObjects\Classes\ModuleHiddenObjects;
-use ShopCore;
 
 class AdminHiddenObjectsController extends \ModuleAdminController
 {

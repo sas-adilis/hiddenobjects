@@ -13,6 +13,8 @@
 
 namespace Adilis\HiddenObjects\Classes;
 
+use Adilis\HiddenObjects\Sql\TableInstaller;
+
 /**
  * @property $module_name
  * @noinspection PhpMultipleClassDeclarationsInspection
@@ -82,6 +84,7 @@ class ModuleHiddenObjects extends \Module
 
     public function install(): bool
     {
+
         require_once _PS_MODULE_DIR_ . $this->module_name . '/sql/install.php';
 
         \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_VERSION', $this->version);
@@ -91,6 +94,7 @@ class ModuleHiddenObjects extends \Module
 
         return
             parent::install()
+            && (new TableInstaller())->setTable($this->getTable())->install()
             && $this->installTab()
             && $this->registerHook('header')
             && $this->registerHook('backOfficeHeader')

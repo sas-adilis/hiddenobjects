@@ -1,4 +1,5 @@
 {
+    "version": "1.0.0",
     "name": "adilis/hiddenobjects",
     "type": "library",
     "autoload": {
@@ -12,5 +13,10 @@
             "email": "contact@adilis.fr"
         }
     ],
-    "require": {}
+    "require": {
+      "ext-json": "*"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.16"
+    }
 }

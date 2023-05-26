@@ -18,7 +18,7 @@ namespace Adilis\HiddenObjects\Classes;
  * @noinspection PhpMultipleClassDeclarationsInspection
  */
 
-class ModuleHiddenObjects extends \Module implements ModuleHiddenObjectsInterface
+class ModuleHiddenObjects extends \Module
 {
     public static $contests = false;
     public $is_in_maintenance = '';
@@ -492,11 +492,6 @@ class ModuleHiddenObjects extends \Module implements ModuleHiddenObjectsInterfac
 
         $this->smarty->assign('objects', $objects);
         return $this->display($this->getFileName(), 'views/templates/front/hook/shopping-cart.tpl');
-    }
-
-    public function getPrefix(): string
-    {
-        return '';
     }
 
     public function getRestrictionsValues(): array

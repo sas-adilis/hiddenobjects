@@ -26,14 +26,14 @@ class HOTools
     public static function formatFileSize($bytes): string
     {
         if ($bytes >= 1000000000) {
-            return Tools::ps_round($bytes / 1000000000, 2) . ' GB';
+            return \Tools::ps_round($bytes / 1000000000, 2) . ' GB';
         }
 
         if ($bytes >= 1000000) {
-            return Tools::ps_round($bytes / 1000000, 2) . ' MB';
+            return \Tools::ps_round($bytes / 1000000, 2) . ' MB';
         }
 
-        return Tools::ps_round($bytes / 1000, 2) . ' KB';
+        return \Tools::ps_round($bytes / 1000, 2) . ' KB';
     }
 
     public static function buildOrWhere($orWhere): string
@@ -49,5 +49,4 @@ class HOTools
     {
           return !(\Shop::isFeatureActive() && \Shop::getContext() != ShopCore::CONTEXT_SHOP);
     }
-}
 }

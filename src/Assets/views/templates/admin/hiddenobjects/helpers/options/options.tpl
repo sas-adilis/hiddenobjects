@@ -18,7 +18,7 @@
 					<input type="text"{if isset($field['id'])} id="{$field['id']|intval}"{/if} size="{if isset($field['size'])}{$field['size']|intval}{else}5{/if}" name="{$key|escape:'htmlall':'UTF-8'}" value="{$field['value']|escape:'html':'UTF-8'}" />
 				</div>
 				<div class="col-lg-1">
-					<button type="button" class="btn btn-default" onclick="addRemoteAddr();"><i class="icon-plus"></i> {l s='Add my IP' mod='easterhiddenobjects'}</button>
+					<button type="button" class="btn btn-default" onclick="addRemoteAddr();"><i class="icon-plus"></i> {l s='Add my IP' mod='[[MODULENAME]]'}</button>
 				</div>
 			</div>
 			{if !empty($field['desc'])}

@@ -107,6 +107,7 @@ class ModuleHiddenObjects extends \Module
         \Configuration::deleteByName($this->getPrefix() . 'HIDDENOBJECTS_VERSION');
         \Configuration::deleteByName($this->getPrefix() . 'HIDDENOBJECTS_SELECTOR');
         \Configuration::deleteByName($this->getPrefix() . 'HIDDENOBJECTS_TEST');
+
         return parent::uninstall() && $this->uninstallTab();
     }
 
@@ -526,7 +527,7 @@ class ModuleHiddenObjects extends \Module
             $content = str_replace('[[MODULENAME]]', $this->name, $content);
             @file_put_contents($this->getLocalPath() . $file, $content);
         }
-        
+
         return true;
     }
 
@@ -583,9 +584,9 @@ class ModuleHiddenObjects extends \Module
 
                     $file_version = basename($tab[1], '.php');
                     // Compare version, if minor than actual, we need to upgrade the module
-                    if (count($tab) == 2 &&
-                        (\Tools::version_compare($file_version, $module_version, '<=') &&
-                            \Tools::version_compare($file_version, $registered_version, '>'))) {
+                    if (count($tab) == 2
+                        && (\Tools::version_compare($file_version, $module_version, '<=')
+                            && \Tools::version_compare($file_version, $registered_version, '>'))) {
                         $list[] = [
                             'file' => $upgrade_path . $file,
                             'version' => $file_version,

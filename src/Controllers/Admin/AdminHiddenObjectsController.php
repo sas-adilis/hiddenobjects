@@ -62,7 +62,7 @@ class AdminHiddenObjectsController extends \ModuleAdminController
         $this->override_folder = 'hiddenobjects';
         $this->tpl_folder = 'hiddenobjects/';
         $this->table = 'hiddenobjects_' . \Tools::strtolower($this->module->getPrefix());
-        $this->className = $this->module->getPrefix() . 'HiddenObject';
+        $this->className = $this->module->getClassName();
         $this->bootstrap = true;
         $this->lang = true;
         $this->specificConfirmDelete = false;
@@ -76,12 +76,12 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                 'text' => $this->l('Disable selection'),
                 'icon' => 'icon-power-off text-danger',
             ],
-            'divider' => [ 'text' => 'divider' ],
+            'divider' => ['text' => 'divider'],
             'delete' => [
                 'text' => $this->l('Delete selected'),
                 'icon' => 'icon-trash',
-                'confirm' => $this->l('Delete selected items?')
-            ]
+                'confirm' => $this->l('Delete selected items?'),
+            ],
         ];
 
         $restriction_array = [];
@@ -89,31 +89,10 @@ class AdminHiddenObjectsController extends \ModuleAdminController
             $restriction_array[$restriction['value']] = $restriction['label'];
         }
 
-        $renew_array = [];
-        foreach ($this->module->getRenewValues() as $renew) {
-            $renew_array[$renew['value']] = $renew['label'];
-        }
-
         $this->fields_options = [
             'general' => [
                 'title' => $this->l('Options'),
                 'fields' => [
-                    $this->module->getPrefix() . 'HIDDENOBJECTS_DISPLAY' => [
-                        'title' => $this->l('Hide objects'),
-                        'desc' => $this->l('Select where you want hide objects'),
-                        'type' => 'select',
-                        'list' => [
-                            [
-                                'name' => $this->l('Display in front'),
-                                'value' => 'front',
-                            ],
-                            [
-                                'name' => $this->l('Display behind'),
-                                'value' => 'behind',
-                            ],
-                        ],
-                        'identifier' => 'value',
-                    ],
                     $this->module->getPrefix() . 'HIDDENOBJECTS_SELECTOR' => [
                         'title' => $this->l('Jquery selector for experts'),
                         'type' => 'text',
@@ -125,62 +104,56 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                         'type' => 'bool',
                         'desc' => $this->l('Lets you see the icon even though you have already found'),
                     ],
-                    $this->module->getPrefix() . 'HIDDENOBJECTS_IPS' => [
-                        'title' => $this->l('IPs for test mode'),
-                        'validation' => 'isGenericName',
-                        'type' => 'test_ip',
-                        'hint' => $this->l('IP addresses allowed to see icons many times. Empty value for everyone.'),
-                        'desc' => $this->l('Please use a comma to separate them (e.g. 42.24.4.2,99.98.97.96)'),
-                    ],
                 ],
                 'submit' => ['title' => $this->l('Save')],
             ],
         ];
 
         $this->fields_list = [
-            'id_hiddenobject' => ['title' => $this->l('ID'), 'align' => 'center', 'class' => 'fixed-width-xs',],
-            'icon' => ['title' => $this->l('Icon'), 'callback' => 'getIconForList', 'class' => 'fixed-width-xs', 'align' => 'center',],
+            'id_hiddenobject' => ['title' => $this->l('ID'), 'align' => 'center', 'class' => 'fixed-width-xs'],
+            'icon' => ['title' => $this->l('Icon'), 'callback' => 'getIconForList', 'class' => 'fixed-width-xs', 'align' => 'center'],
             'name' => ['title' => $this->l('Name')],
-            'date_start' => ['title' => $this->l('Date from'), 'filter_key' => 'a!date_start', 'type' => 'datetime',],
-            'date_end' => ['title' => $this->l('Date to'), 'filter_key' => 'a!date_end', 'type' => 'datetime',],
-            'how_many' => ['title' => $this->l('How many'), 'filter_key' => 'a!how_many', 'align' => 'center',],
-            'renew' => ['title' => $this->l('Renew'), 'type' => 'select', 'list' => $renew_array, 'filter_key' => 'a!renew',],
-            'restriction' => ['title' => $this->l('Restriction on'), 'type' => 'select', 'list' => $restriction_array, 'filter_key' => 'a!restriction',],
-            'active' => ['title' => $this->l('Active'), 'active' => 'status', 'type' => 'bool', 'class' => 'fixed-width-xs', 'align' => 'center', 'orderby' => false,],
+            'date_start' => ['title' => $this->l('Date from'), 'filter_key' => 'a!date_start', 'type' => 'datetime'],
+            'date_end' => ['title' => $this->l('Date to'), 'filter_key' => 'a!date_end', 'type' => 'datetime'],
+            'how_many' => ['title' => $this->l('How many'), 'callback' => 'printHowMany', 'filter_key' => 'a!how_many', 'align' => 'center'],
+            'restriction' => ['title' => $this->l('Restriction on'), 'type' => 'select', 'list' => $restriction_array, 'filter_key' => 'a!restriction'],
+            'active' => ['title' => $this->l('Active'), 'active' => 'status', 'type' => 'bool', 'class' => 'fixed-width-xs', 'align' => 'center', 'orderby' => false],
         ];
 
         $this->results_fields_list = [
-            'id_hiddenobject_founded' => ['title' => $this->l('ID'), 'align' => 'center', 'class' => 'fixed-width-xs',],
-            'customer' => ['title' => $this->l('Founded by'), 'havingFilter' => true,],
-            'cart_rule_code' => ['title' => $this->l('Cart rule'), 'havingFilter' => true,],
-            'date' => ['title' => $this->l('Date'), 'type' => 'datetime',],
-            'is_test' => ['title' => $this->l('Is a test ?'), 'type' => 'bool', 'align' => 'center', 'activeVisu' => true,],
-            'ip_address' => ['title' => $this->l('IP Address'), 'callback' => 'returnIP', 'search' => false,],
+            'id_hiddenobject_founded' => ['title' => $this->l('ID'), 'align' => 'center', 'class' => 'fixed-width-xs'],
+            'customer' => ['title' => $this->l('Founded by'), 'havingFilter' => true],
+            'cart_rule_code' => ['title' => $this->l('Cart rule'), 'havingFilter' => true],
+            'date' => ['title' => $this->l('Date'), 'type' => 'datetime'],
+            'is_test' => ['title' => $this->l('Is a test ?'), 'type' => 'bool', 'align' => 'center', 'activeVisu' => true],
+            'ip_address' => ['title' => $this->l('IP Address'), 'callback' => 'returnIP', 'search' => false],
         ];
 
         $this->actions = ['edit', 'delete'];
 
         if (\Shop::isFeatureActive() && \Shop::getContext() == \ShopCore::CONTEXT_SHOP) {
-            $this->_where .= 'AND a.`id_shop`= ' . (int)\Context::getContext()->shop->id;
+            $this->_where .= 'AND a.`id_shop`= ' . (int) \Context::getContext()->shop->id;
         }
+    }
+
+    public function printHowMany($echo, $tr)
+    {
+        $renew = $tr['renew'] == 'none' ? '' : ' ' . $this->module->getRenewLabelByValue($tr['renew']);
+
+        return \Tools::strtolower($echo . $renew);
     }
 
     public function getIconForList($echo, $tr): string
     {
-        return '<img src="' . $this->module->icons_path . '64/icon-' . (int) $tr['icon'] . '.png" width="32" height="32" />';
+        return '<img src="' . $this->module->getIconsPath() . '64/icon-' . (int) $tr['icon'] . '.png" width="32" height="32" />';
     }
 
     public function setMedia($isNewTheme = false)
     {
         parent::setMedia($isNewTheme);
-        $this->removeChosen();
-        $this->context->controller->addJs([
-            $this->module->getLocalPath() . '/views/js/chosen.jquery.min.js',
-            $this->module->getLocalPath() . '/views/js/ajax-chosen.min.js',
-            $this->module->getLocalPath() . '/views/js/back.js',
-        ]);
+        $this->context->controller->addJs($this->module->getLocalPath() . '/views/js/back.js');
         $this->context->controller->addCss($this->module->getLocalPath() . '/views/css/back.css');
-        $this->addJqueryPlugin(['typewatch', 'fancybox', 'autocomplete']);
+        $this->addJqueryPlugin(['typewatch', 'autocomplete']);
     }
 
     public function initPageHeaderToolbar()
@@ -211,100 +184,16 @@ class AdminHiddenObjectsController extends \ModuleAdminController
             \Tools::isSubmit('submitAddhiddenobjects_' . \Tools::strtolower($this->module->getPrefix()))
             || \Tools::isSubmit('submitAddhiddenobjects_' . \Tools::strtolower($this->module->getPrefix()) . 'AndStay')
         ) {
-            if (!(int)\Tools::getValue('free_gift')) {
+            if (!(int) \Tools::getValue('free_gift')) {
                 $_POST['gift_product'] = 0;
             }
-            if ($id_product = (int)\Tools::getValue('gift_product')) {
-                $_POST['gift_product_attribute'] = (int)\Tools::getValue('ipa_' . $id_product);
+            if ($id_product = (int) \Tools::getValue('gift_product')) {
+                $_POST['gift_product_attribute'] = (int) \Tools::getValue('ipa_' . $id_product);
             }
         } elseif (\Tools::getIsset('submitReset' . $this->list_id)) {
             parent::processResetFilters($this->list_id);
         }
         parent::postProcess();
-    }
-
-    protected function processSaveImages($object)
-    {
-        foreach (['home', 'column'] as $picture) {
-            foreach (\Language::getLanguages() as $language) {
-                $input_name = $picture . '_' . (int) $language['id_lang'];
-                if (isset($_FILES[$input_name]) && $_FILES[$input_name]['error'] == 0) {
-                    $extension = pathinfo($_FILES[$input_name]['name'], PATHINFO_EXTENSION);
-                    if (!in_array(\Tools::strtolower($extension), ['png', 'jpg', 'gif'])) {
-                        $this->errors[] = $this->l('File type is not allowed, please send only jpg, gif or png');
-                        return;
-                    }
-
-                    if ($_FILES[$input_name]['size'] > \Configuration::get('PS_PRODUCT_PICTURE_MAX_SIZE')) {
-                        $this->errors[] = sprintf(
-                            $this->l('Your file is too big, %s of %s allowed'),
-                            self::formatFileSize($_FILES[$input_name]['size']),
-                            self::formatFileSize(\Configuration::get('PS_PRODUCT_PICTURE_MAX_SIZE'))
-                        );
-                        return;
-                    }
-
-                    $filename = $object->id . '_' . $input_name . '.' . \Tools::strtolower($extension);
-                    if (!move_uploaded_file($_FILES[$input_name]['tmp_name'], $this->module->uploads_dir . $filename)) {
-                        $this->errors[] = $this->l('An error occurred during file upload');
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    public function ajaxProcesssearchproduct()
-    {
-        $query = Tools::getValue('term', false);
-        if (!$query || $query == '' || Tools::strlen($query) < 1) {
-            die;
-        }
-
-        $sql = 'SELECT p.`id_product`, `reference`, pl.name
-        FROM `' . _DB_PREFIX_ . 'product` p
-        LEFT JOIN `' . _DB_PREFIX_ . 'product_lang` pl ON (pl.id_product = p.id_product
-        AND pl.id_lang = ' . (int) Context::getContext()->language->id . Shop::addSqlRestrictionOnLang('pl') . ')
-        WHERE (pl.name LIKE \'%' . pSQL($query) . '%\' OR p.reference LIKE \'%' . pSQL($query) . '%\')';
-        $items = Db::getInstance()->executeS($sql);
-        $products = [];
-
-        if ($items) {
-            foreach ($items as $item) {
-                $products[] = [
-                    'id' => $item['id_product'],
-                    'name' => $item['reference'] ? $item['reference'] . ' : ' . $item['name'] : $item['name'],
-                ];
-            }
-        }
-
-        echo Tools::jsonEncode($products);
-        die;
-    }
-
-    public function ajaxProcesssearchcms()
-    {
-        $query = Tools::getValue('term', false);
-        if (!$query || $query == '' || Tools::strlen($query) < 1) {
-            die;
-        }
-
-        $sql = 'SELECT c.`id_cms`, cl.meta_title as name
-        FROM `' . _DB_PREFIX_ . 'cms` c
-        LEFT JOIN `' . _DB_PREFIX_ . 'cms_lang` cl
-            ON (cl.id_cms = c.id_cms AND cl.id_lang = ' . (int) Context::getContext()->language->id . ')
-        WHERE (cl.meta_title LIKE \'%' . pSQL($query) . '%\')';
-        $items = Db::getInstance()->executeS($sql);
-
-        $cms = [];
-        if ($items) {
-            foreach ($items as $item) {
-                $cms[] = ['id' => $item['id_cms'], 'name' => $item['name']];
-            }
-        }
-
-        echo Tools::jsonEncode($cms);
-        die;
     }
 
     public function renderOptions(): string
@@ -364,11 +253,13 @@ class AdminHiddenObjectsController extends \ModuleAdminController
     {
         if (!HOTools::isShopContext()) {
             $this->warnings[] = $this->l('Please, select a shop before create or edit a game');
+
             return $this->renderAbout();
         }
 
         if ($this->object->id && $this->object->id_shop != $this->context->shop->id) {
             $this->warnings[] = $this->l('This game has been created in another shop');
+
             return $this->renderAbout();
         }
 
@@ -377,20 +268,13 @@ class AdminHiddenObjectsController extends \ModuleAdminController
             $this->fields_value['date_end'] = date('Y-m-d H:i:s');
         }
 
-        $this->content .= '
-        <script type="text/javascript">
-            var token = \'' . $this->token . '\';
-            var hcNoResultFoundFor = \'' . $this->l('No result found for') . '\';
-            var hcContinueTyping = \'' . $this->l('Continue typing') . '\';
-            var hcLookingFor = \'' . $this->l('Looking for') . '\';
-            var hcStartTyping = \'' . $this->l('Start typing') . '\';
-        </script>';
-
         $this->fields_value['search_results'] = '<div id="search_results"></div>';
         $this->context->smarty->assign(
             [
                 'languages' => \Language::getLanguages(false),
-                'id_lang_default' => (int)\Configuration::get('PS_LANG_DEFAULT'),
+                'id_lang_default' => (int) \Configuration::get('PS_LANG_DEFAULT'),
+                'renew_values' => $this->module->getRenewValues(),
+                'renew_value_selected' => $this->object->renew,
             ]
         );
 
@@ -413,8 +297,8 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                 case 'products':
                     if (is_array($this->object->restriction_value)) {
                         foreach ($this->object->restriction_value as $id_product) {
-                            $product = new Product($id_product, false, $this->context->cookie->id_lang);
-                            if (Validate::isLoadedObject($product)) {
+                            $product = new \Product($id_product, false, $this->context->cookie->id_lang);
+                            if (\Validate::isLoadedObject($product)) {
                                 $product_name = $product->reference ?
                                 $product->reference . ' : ' . $product->name : $product->name;
                                 $only_products[] = ['id_product' => $product->id, 'name' => $product_name];
@@ -426,8 +310,8 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                 case 'cms':
                     if (is_array($this->object->restriction_value)) {
                         foreach ($this->object->restriction_value as $id_cms) {
-                            $cms = new CMS($id_cms, $this->context->cookie->id_lang);
-                            if (Validate::isLoadedObject($cms)) {
+                            $cms = new \CMS($id_cms, $this->context->cookie->id_lang);
+                            if (\Validate::isLoadedObject($cms)) {
                                 $only_cms[] = ['id_cms' => $cms->id, 'name' => $cms->meta_title];
                             }
                         }
@@ -435,14 +319,10 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                     $this->object->{'only_cms[]'} = $this->object->restriction_value;
                     break;
             }
-
-            foreach ($this->object->images as $key => $images_array) {
-                $this->fields_value[$key] = $images_array;
-            }
         }
 
         $selected_categories = [];
-        if (Validate::isLoadedObject($this->object)) {
+        if (\Validate::isLoadedObject($this->object)) {
             if ($this->object->restriction == 'categories' || $this->object->restriction == 'categories_and_products') {
                 $selected_categories = $this->object->restriction_value;
             }
@@ -472,15 +352,7 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                     'autoload_rte' => true,
                     'lang' => true,
                     'hint' => $this->l('Leave empty for default text'),
-                    'desc' => $this->l('Use tag {code} in order to display cart rule code for user. Use tag {rules} in order to display rules.'),
-                ],
-                [
-                    'type' => 'textarea',
-                    'label' => $this->l('Rules of the game'),
-                    'name' => 'rules',
-                    'autoload_rte' => true,
-                    'lang' => true,
-                    'desc' => $this->l('If set will be display on advertising click.'),
+                    'desc' => $this->l('Use tag {code} in order to display cart rule code for user. Leave empty to use default message  '),
                 ],
                 [
                     'type' => 'datetime',
@@ -507,17 +379,6 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                     'name' => 'how_many',
                     'id' => 'how_many',
                     'required' => true,
-                ],
-                [
-                    'type' => 'select',
-                    'label' => $this->l('Renewal'),
-                    'name' => 'renew',
-                    'id' => 'renew',
-                    'options' => [
-                        'query' => $this->module->getRenewValues(),
-                        'id' => 'value',
-                        'name' => 'label',
-                    ],
                 ],
                 [
                     'type' => 'switch',
@@ -602,6 +463,7 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                     'col' => 4,
                     'id' => 'appear_ratio',
                     'prefix' => $this->l('1 chance of'),
+                    'desc' => $this->l('Choose the probability of the icon appearing. Ex: If you decide to set the probability to 1 in 10, this means that for every 10 times the page is displayed, the icon will appear approximately 1 time.'),
                 ],
                 [
                     'type' => 'select',
@@ -621,9 +483,10 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                     'name' => 'only_products[]',
                     'desc' => $this->l('Select products and this element will appear only on selected products'),
                     'id' => 'only_products',
+                    'class' => 'chosen',
                     'multiple' => true,
                     'options' => [
-                        'query' => $only_products,
+                        'query' => self::getProducts(),
                         'id' => 'id_product',
                         'name' => 'name',
                     ],
@@ -634,9 +497,10 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                     'name' => 'only_cms[]',
                     'desc' => $this->l('Select cms and this element will appear only on selected cms pages'),
                     'id' => 'only_cms',
+                    'class' => 'chosen',
                     'multiple' => true,
                     'options' => [
-                        'query' => $only_cms,
+                        'query' => self::getCMSPages(),
                         'id' => 'id_cms',
                         'name' => 'name',
                     ],
@@ -647,40 +511,13 @@ class AdminHiddenObjectsController extends \ModuleAdminController
             ],
         ];
 
-        $delete_image_url = self::$currentIndex . '&deleteImage&token=' . $this->token;
-        $this->fields_form[]['form'] = [
-            'legend' => [
-                'title' => '<i class="icon-picture"></i> ' . $this->l('Advertising'),
-            ],
-            'input' => [
-                [
-                    'type' => version_compare(_PS_VERSION_, '1.6.0', '>=') ? 'file_lang' : 'file',
-                    'label' => $this->l('Home visual'),
-                    'name' => 'home',
-                    'lang' => true,
-                    'display_image' => true,
-                    'delete_url' => $delete_image_url . '&id_hiddenobject=' . $this->object->id . '&image_type=home',
-                    'desc' => $this->l('Select advertising to display in your homepage. Size depends on your theme.'),
-                ],
-                [
-                    'type' => version_compare(_PS_VERSION_, '1.6.0', '>=') ? 'file_lang' : 'file',
-                    'label' => $this->l('Visual for the column'),
-                    'name' => 'column',
-                    'lang' => true,
-                    'display_image' => true,
-                    'delete_url' => $delete_image_url . '&id_hiddenobject=' . $this->object->id . '&image_type=column',
-                    'desc' => $this->l('Select advertising to display in your column. Size depends on your theme.'),
-                ],
-            ],
-        ];
-
         $this->fields_form[]['form'] = [
             'legend' => [
                 'title' => '<i class="icon-tag"></i> ' . $this->l('Cart rule'),
             ],
             'input' => [
                 [
-                    'type' => version_compare(_PS_VERSION_, '1.6.0', '>=') ? 'switch' : 'radio',
+                    'type' => 'switch',
                     'class' => 't',
                     'label' => $this->l('Use existing cart rule'),
                     'name' => 'use_custom_cart_rule',
@@ -720,13 +557,11 @@ class AdminHiddenObjectsController extends \ModuleAdminController
             'class' => 'pull-right',
             'icon' => 'process-icon-save',
             'type' => 'submit',
-            'name' => 'submitAddhiddenobjects_' . Tools::strtolower($this->module->prefix) . 'AndStay',
+            'name' => 'submitAddhiddenobjects_' . \Tools::strtolower($this->module->getPrefix()) . 'AndStay',
         ]];
 
-        if (version_compare(_PS_VERSION_, '1.6.0.6', '>')) {
-            $this->renderFormInTabs($this->fields_form);
-            $this->multiple_fieldsets = false;
-        }
+        $this->renderFormInTabs($this->fields_form);
+        $this->multiple_fieldsets = false;
 
         $string = parent::renderForm();
         $string .= $this->renderResults();
@@ -764,22 +599,21 @@ class AdminHiddenObjectsController extends \ModuleAdminController
         $this->context->smarty->assign(
             [
                 'moduleversion' => $this->module->version,
-                'module_dir' => $this->module_dir,
+                'module_dir' => $this->module->getPathUri(),
                 'psversion' => _PS_VERSION_,
                 'phpversion' => PHP_VERSION,
-                'iso_code' => Language::getIsoById($this->context->cookie->id_lang),
+                'iso_code' => \Language::getIsoById($this->context->cookie->id_lang),
             ]
         );
-        $string = $this->context->smarty->fetch($this->module_path . '/views/templates/admin/about.tpl');
 
-        return $string;
+        return $this->context->smarty->fetch($this->module->getLocalPath() . '/views/templates/admin/about.tpl');
     }
 
     public function renderIconSelection()
     {
-        $images = glob($this->module->icons_dir . '64/icon-{*.gif,*.jpg,*.png}', GLOB_BRACE);
+        $images = glob($this->module->getIconsDir() . '64/icon-{*.gif,*.jpg,*.png}', GLOB_BRACE);
         natsort($images);
-        $id_icon_selected = (int) Tools::getValue('icon', $this->object->icon);
+        $id_icon_selected = (int) \Tools::getValue('icon', $this->object->icon);
         $id_icon_selected_default = false;
         $icons = [];
         foreach ($images as $image) {
@@ -796,7 +630,7 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                 }
             }
             $icons[] = [
-                'src' => $this->module->icons_path . '64/' . basename($image),
+                'src' => $this->module->getIconsPath() . '64/' . basename($image),
                 'id' => (int) $matches[1],
                 'selected' => $is_selected,
             ];
@@ -804,29 +638,29 @@ class AdminHiddenObjectsController extends \ModuleAdminController
         $this->context->smarty->assign(
             [
                 'icons' => $icons,
-                'module_name' => $this->module->name,
+                'module_name' => $this->module->getName(),
                 'object' => $this->object,
             ]
         );
 
-        return $this->context->smarty->fetch($this->module_path . '/views/templates/admin/icon-selection.tpl');
+        return $this->context->smarty->fetch($this->module->getLocalPath() . '/views/templates/admin/icon-selection.tpl');
     }
 
     public function renderCartRule()
     {
-        $currencies = Currency::getCurrencies(false, true, true);
+        $currencies = \Currency::getCurrencies(false, true, true);
 
         $gift_product_filter = '';
-        if (Validate::isUnsignedId($this->object->gift_product)
-            && ($product = new Product($this->object->gift_product, false, $this->context->language->id))
-            && Validate::isLoadedObject($product)) {
+        if (\Validate::isUnsignedId($this->object->gift_product)
+            && ($product = new \Product($this->object->gift_product, false, $this->context->language->id))
+            && \Validate::isLoadedObject($product)) {
             $gift_product_filter = (!empty($product->reference) ? $product->reference : $product->name);
         }
 
         $reduction_product_filter = '';
-        if (Validate::isUnsignedId($this->object->reduction_product)
-            && ($product = new Product($this->object->reduction_product, false, $this->context->language->id))
-            && Validate::isLoadedObject($product)) {
+        if (\Validate::isUnsignedId($this->object->reduction_product)
+            && ($product = new \Product($this->object->reduction_product, false, $this->context->language->id))
+            && \Validate::isLoadedObject($product)) {
             $reduction_product_filter = (!empty($product->reference) ? $product->reference : $product->name);
         }
 
@@ -865,56 +699,56 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                 'reductionProductFilter' => $reduction_product_filter,
                 'currencies' => $currencies,
                 'currentObject' => $this->object,
-                'cartRulesToken' => Tools::getAdminTokenLite('AdminCartRules'),
+                'cartRulesToken' => \Tools::getAdminTokenLite('AdminCartRules'),
                 'currentTab' => $this,
-                'defaultCurrency' => (int) Configuration::get('PS_CURRENCY_DEFAULT'),
+                'defaultCurrency' => (int) \Configuration::get('PS_CURRENCY_DEFAULT'),
                 'ps_version' => _PS_VERSION_,
             ]
         );
 
-        return $this->context->smarty->fetch($this->module_path . '/views/templates/admin/cart-rule.tpl');
+        return $this->context->smarty->fetch($this->module->getLocalPath() . '/views/templates/admin/cart-rule.tpl');
     }
 
     protected function _childValidation()
     {
-        if ((int) Tools::getValue('minimum_amount') < 0) {
+        if ((int) \Tools::getValue('minimum_amount') < 0) {
             $this->errors[] = $this->l('The minimum amount cannot be lower than zero.');
         }
-        if ((int) Tools::getValue('cart_rule_date_to') <= 0) {
+        if ((int) \Tools::getValue('cart_rule_date_to') <= 0) {
             $this->errors[] = $this->l('The validaty of cart rule must be greater than zero.');
         }
-        if ((float) Tools::getValue('reduction_percent') < 0 || (float) Tools::getValue('reduction_percent') > 100) {
+        if ((float) \Tools::getValue('reduction_percent') < 0 || (float) \Tools::getValue('reduction_percent') > 100) {
             $this->errors[] = $this->l('Reduction percentage must be between 0% and 100%');
         }
-        if ((int) Tools::getValue('reduction_amount') < 0) {
+        if ((int) \Tools::getValue('reduction_amount') < 0) {
             $this->errors[] = $this->l('Reduction amount cannot be lower than zero.');
         }
-        $custom_cart_rule_code = Tools::getValue('custom_cart_rule_code');
-        if ($custom_cart_rule_code && !(int) CartRule::getIdByCode($custom_cart_rule_code)) {
+        $custom_cart_rule_code = \Tools::getValue('custom_cart_rule_code');
+        if ($custom_cart_rule_code && !(int) \CartRule::getIdByCode($custom_cart_rule_code)) {
             $this->errors[] = sprintf($this->l('This cart rule code %d not exists'), $custom_cart_rule_code);
         }
         if (
             !$custom_cart_rule_code
-            && Tools::getValue('apply_discount') == 'off'
-            && !Tools::getValue('free_shipping') && !Tools::getValue('free_gift')
+            && \Tools::getValue('apply_discount') == 'off'
+            && !\Tools::getValue('free_shipping') && !\Tools::getValue('free_gift')
         ) {
             $this->errors[] = $this->l('An action is required for this cart rule.');
         }
 
-        switch (Tools::getValue('restriction')) {
+        switch (\Tools::getValue('restriction')) {
             case 'categories':
             case 'categories_and_products':
-                if (!Tools::getValue('only_categories')) {
+                if (!\Tools::getValue('only_categories')) {
                     $this->errors[] = $this->l('You must set at least one category.');
                 }
                 break;
             case 'products':
-                if (!Tools::getValue('only_products')) {
+                if (!\Tools::getValue('only_products')) {
                     $this->errors[] = $this->l('You must set at least one product.');
                 }
                 break;
             case 'cms':
-                if (!Tools::getValue('only_cms')) {
+                if (!\Tools::getValue('only_cms')) {
                     $this->errors[] = $this->l('You must set at least one cms page.');
                 }
                 break;
@@ -928,47 +762,33 @@ class AdminHiddenObjectsController extends \ModuleAdminController
         parent::copyFromPost($object, $table);
         $object->id_shop = $this->context->shop->id;
 
-        switch (Tools::getValue('restriction')) {
+        switch (\Tools::getValue('restriction')) {
             case 'categories':
             case 'categories_and_products':
-                $object->restriction_value = Tools::getValue('only_categories', []);
+                $object->restriction_value = \Tools::getValue('only_categories', []);
                 break;
             case 'products':
-                $object->restriction_value = Tools::getValue('only_products', []);
+                $object->restriction_value = \Tools::getValue('only_products', []);
                 break;
             case 'cms':
-                $object->restriction_value = Tools::getValue('only_cms', []);
+                $object->restriction_value = \Tools::getValue('only_cms', []);
                 break;
             default:
                 $object->restriction_value = [];
                 break;
         }
-        $object->cart_rule_restriction = (bool) Tools::getValue('cart_rule_restriction');
-    }
-
-    protected function afterAdd($object)
-    {
-        $this->processSaveImages($object);
-
-        return true;
-    }
-
-    protected function afterUpdate($object)
-    {
-        $this->processSaveImages($object);
-
-        return true;
+        $object->cart_rule_restriction = (bool) \Tools::getValue('cart_rule_restriction');
     }
 
     protected function searchProducts($search)
     {
-        if ($products = Product::searchByName((int) $this->context->language->id, $search)) {
+        if ($products = \Product::searchByName((int) $this->context->language->id, $search)) {
             foreach ($products as &$product) {
                 $combinations = [];
-                $productObj = new Product((int) $product['id_product'], false, (int) $this->context->language->id);
+                $productObj = new \Product((int) $product['id_product'], false, (int) $this->context->language->id);
                 $attributes = $productObj->getAttributesGroups((int) $this->context->language->id);
-                $product['formatted_price'] = Tools::displayPrice(
-                    Tools::convertPrice($product['price_tax_incl'], $this->context->currency),
+                $product['formatted_price'] = \Tools::displayPrice(
+                    \Tools::convertPrice($product['price_tax_incl'], $this->context->currency),
                     $this->context->currency
                 );
 
@@ -980,13 +800,13 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                     $combinations[$att['id_product_attribute']]['id_product_attribute'] = $att['id_product_attribute'];
                     $combinations[$att['id_product_attribute']]['default_on'] = $att['default_on'];
                     if (!isset($combinations[$att['id_product_attribute']]['price'])) {
-                        $price_tax_incl = Product::getPriceStatic(
+                        $price_tax_incl = \Product::getPriceStatic(
                             (int) $product['id_product'],
                             true,
                             $att['id_product_attribute']
                         );
-                        $combinations[$att['id_product_attribute']]['formatted_price'] = Tools::displayPrice(
-                            Tools::convertPrice($price_tax_incl, $this->context->currency),
+                        $combinations[$att['id_product_attribute']]['formatted_price'] = \Tools::displayPrice(
+                            \Tools::convertPrice($price_tax_incl, $this->context->currency),
                             $this->context->currency
                         );
                     }
@@ -1007,122 +827,54 @@ class AdminHiddenObjectsController extends \ModuleAdminController
         }
     }
 
-    public function removeChosen()
-    {
-        foreach ($this->js_files as $key => $js_files) {
-            if (strpos($js_files, 'jquery.chosen.js') !== false) {
-                unset($this->js_files[$key]);
-            }
-        }
-    }
-
     public function getCategoriesField($selected_categories = [])
     {
-        $root_category = Category::getRootCategory();
-        $field = [
+        $root_category = \Category::getRootCategory();
+
+        return [
             'type' => 'categories',
             'label' => $this->l('Only for categories'),
             'name' => 'only_categories',
             'desc' => $this->l('Select categories and this element will appear only on selected categories'),
-        ];
-        if (version_compare(_PS_VERSION_, '1.6.0', '>=')) {
-            $field['tree'] = [
+            'tree' => [
                 'id' => 'only_categories',
                 'title' => $this->l('Available categories'),
                 'disabled_categories' => [],
                 'selected_categories' => $selected_categories,
                 'root_category' => $root_category->id,
                 'use_checkbox' => true,
-            ];
-        } else {
-            $root_category = ['id_category' => $root_category->id, 'name' => $root_category->name];
-            $field['values'] = [
-                'trads' => [
-                    'Root' => $root_category,
-                    'selected' => $this->l('Selected'),
-                    'Collapse All' => $this->l('Collapse All'),
-                    'Expand All' => $this->l('Expand All'),
-                    'Check All' => $this->l('Check All'),
-                    'Uncheck All' => $this->l('Uncheck All'),
-                ],
-                'selected_cat' => $selected_categories,
-                'disabled_categories' => [],
-                'input_name' => 'only_categories[]',
-                'use_radio' => false,
-                'use_search' => false,
-                'top_category' => Category::getTopCategory(),
-                'use_context' => true,
-            ];
-        }
-
-        return $field;
-    }
-
-    public function processDeleteImage()
-    {
-        if (Validate::isLoadedObject($object = $this->loadObject())) {
-            $id_lang = (int) Tools::getValue('id_lang');
-            $image_type = Tools::getValue('image_type');
-
-            if (!in_array($image_type, ['home', 'column'])) {
-                $this->errors[] = $this->l('An error occurred during file deletion');
-
-                return;
-            }
-
-            if (is_array($object->images[$image_type]) && array_key_exists($id_lang, $object->images[$image_type])) {
-                $filename = $object->images[$image_type][$id_lang]['path'];
-                if (file_exists($filename) && !unlink($filename)) {
-                    $this->errors[] = $this->l('An error occurred during file deletion');
-
-                    return false;
-                } else {
-                    $this->redirect_after = self::$currentIndex . '&add' . $this->table . '&' . $this->identifier;
-                    $this->redirect_after .= '=' . Tools::getValue($this->identifier) . '&conf=7&token=' . $this->token;
-                }
-            } else {
-                $this->errors[] = $this->l('An error occurred during file deletion');
-
-                return false;
-            }
-        }
-
-        return $object;
-    }
-
-    public static function formatFileSize($bytes)
-    {
-        if ($bytes >= 1000000000) {
-            return Tools::ps_round($bytes / 1000000000, 2) . ' GB';
-        }
-
-        if ($bytes >= 1000000) {
-            return Tools::ps_round($bytes / 1000000, 2) . ' MB';
-        }
-
-        return Tools::ps_round($bytes / 1000, 2) . ' KB';
+            ],
+        ];
     }
 
     protected function l($string, $class = null, $addslashes = false, $htmlentities = true)
     {
-        return $this->module->l($string, 'adminhiddenobjects');
+        return $this->module->l($string, 'adminhiddenobjectscontroller');
     }
 
-    public function getTemplatePath()
+    private function getCMSPages()
     {
-        if (version_compare(_PS_VERSION_, '1.6.0.5', '==')) {
-            $backtrace = debug_backtrace();
-            if (
-                $backtrace[1]['class'] == 'TreeToolbarCore'
-                || $backtrace[1]['class'] == 'TreeToolbarButtonCore'
-                || $backtrace[1]['class'] == 'TreeCore'
-            ) {
-                return _PS_ADMIN_DIR_ . DIRECTORY_SEPARATOR . 'themes/default/template/';
-            }
+        $context = \Context::getContext();
+        $pages = \CMS::getCMSPages($context->cookie->id_lang, null, true, $context->shop->id);
+        usort($pages, function ($a, $b) {
+            return strcmp($a['meta_title'], $b['meta_title']);
+        });
 
-            return parent::getTemplatePath();
+        foreach ($pages as &$page) {
+            $page['name'] = $page['meta_title'] . ' (ID: ' . $page['id_cms'] . ')';
         }
 
-        return parent::getTemplatePath();
+        return $pages;
+    }
+
+    private function getProducts()
+    {
+        $context = \Context::getContext();
+        $products = \Product::getProducts($context->cookie->id_lang, 0, 0, 'name', 'asc', false, true, $context);
+        foreach ($products as &$product) {
+            $product['name'] = $product['name'] . ' (ID: ' . $product['id_product'] . ')';
+        }
+
+        return $products;
     }
 }

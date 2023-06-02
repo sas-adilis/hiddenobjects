@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpMultipleClassDeclarationsInspection */
+<?php
+
+/** @noinspection PhpMultipleClassDeclarationsInspection */
 
 /**
  * 2016 Adilis
@@ -17,19 +19,15 @@ use Adilis\HiddenObjects\Sql\TableInstaller;
 
 /**
  * @property $module_name
+ *
  * @noinspection PhpMultipleClassDeclarationsInspection
  */
-
 class ModuleHiddenObjects extends \Module
 {
     public static $contests = false;
     public $is_in_maintenance = '';
     private $controller_name;
     public $class_name;
-
-    private $icons_path;
-    private $icons_dir;
-    private $uploads_dir;
 
     /**
      * @throws \Exception
@@ -38,29 +36,28 @@ class ModuleHiddenObjects extends \Module
     {
         $this->controller_name = 'Admin' . $this->getPrefix() . 'HiddenObjects';
         $this->class_name = $this->getPrefix() . 'HiddenObjects';
-        $this->version = '1.1.1';
+        $this->version = '2.0.0';
         $this->need_instance = 0;
         $this->bootstrap = true;
+        $this->module_key = $this->getModuleKey();
+        $this->ps_versions_compliancy = ['min' => '1.6.1', 'max' => _PS_VERSION_];
+        $this->author = 'Adilis';
+        $this->tab = 'pricing_promotion';
+        $this->name = $this->getName();
+        $this->displayName = $this->getDisplayName();
+        $this->description = $this->getDescription();
 
-        /*if (!class_exists('HiddenObject')) {
-            require_once _PS_MODULE_DIR_ . $this->module_name . '/classes/HiddenObject.php';
-        }
-        require_once _PS_MODULE_DIR_ . $this->module_name . '/classes/' . $this->prefix . 'HiddenObject.php';*/
+        require_once _PS_MODULE_DIR_ . $this->getName() . '/classes/' . $this->getPrefix() . 'HiddenObject.php';
 
         parent::__construct();
 
-        $this->icons_path = $this->getPathUri() . 'views/img/icons/';
-        $this->icons_dir = $this->getLocalPath() . 'views/img/icons/';
-        $this->uploads_dir = $this->getLocalPath() . 'views/img/uploads/';
-
         $folders_need_permissions = [
-            $this->uploads_dir,
-            $this->icons_dir . '64/',
-            $this->icons_dir . '48/',
-            $this->icons_dir . '32/',
-            $this->icons_dir . '24/',
-            $this->icons_dir . '20/',
-            $this->icons_dir . '16/',
+            $this->getIconsDir() . '64/',
+            $this->getIconsDir() . '48/',
+            $this->getIconsDir() . '32/',
+            $this->getIconsDir() . '24/',
+            $this->getIconsDir() . '20/',
+            $this->getIconsDir() . '16/',
         ];
 
         foreach ($folders_need_permissions as $folder) {
@@ -71,43 +68,44 @@ class ModuleHiddenObjects extends \Module
                 );
             }
         }
-
-        $this->jquery_selectors = [
-            "#center_column img[src*='-cart']",
-            "#center_column img[src*='-small']",
-            "#center_column img[src*='-medium']",
-            "#center_column img[src*='-home']",
-            "#center_column img[src*='-large']",
-            "#center_column img[src*='img/p/']",
-        ];
     }
 
     public function install(): bool
     {
+        if (version_compare(_PS_VERSION_, '1.7.0', '<')) {
+            $jquery_selectors = [
+                "#center_column img[src*='-cart']",
+                "#center_column img[src*='-small']",
+                "#center_column img[src*='-medium']",
+                "#center_column img[src*='-home']",
+                "#center_column img[src*='-large']",
+                "#center_column img[src*='img/p/']",
+            ];
+        } else {
+            $jquery_selectors = [
+                '#content-wrapper .product-miniature .thumbnail-container img',
+            ];
+        }
+
         \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_VERSION', $this->version);
-        \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_SELECTOR', implode(', ', $this->jquery_selectors));
-        \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_DISPLAY', 'front');
+        \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_SELECTOR', implode(', ', $jquery_selectors));
         \Configuration::updateValue($this->getPrefix() . 'HIDDENOBJECTS_TEST', 0);
 
         return
             parent::install()
             && (new TableInstaller())->setTable($this->getTable())->install()
+            && $this->copyAssets()
             && $this->installTab()
             && $this->registerHook('header')
-            && $this->registerHook('backOfficeHeader')
+            && $this->registerHook('displayBackOfficeHeader')
             && $this->registerHook('displayHeader')
-            && $this->registerHook('displayFooter')
-            && $this->registerHook('displayHome')
-            && $this->registerHook('displayShoppingCartFooter')
-            && $this->setModuleinFirst('displayHome');
+            && $this->registerHook('displayShoppingCartFooter');
     }
-
 
     public function uninstall(): bool
     {
         \Configuration::deleteByName($this->getPrefix() . 'HIDDENOBJECTS_VERSION');
         \Configuration::deleteByName($this->getPrefix() . 'HIDDENOBJECTS_SELECTOR');
-        \Configuration::deleteByName($this->getPrefix() . 'HIDDENOBJECTS_DISPLAY');
         \Configuration::deleteByName($this->getPrefix() . 'HIDDENOBJECTS_TEST');
         return parent::uninstall() && $this->uninstallTab();
     }
@@ -121,16 +119,13 @@ class ModuleHiddenObjects extends \Module
         $id_tab = \Tab::getIdFromClassName($this->controller_name);
         $tab = new \Tab($id_tab);
         $tab->name = [];
-        foreach (\Language::getLanguages(false) as $lang) {
-            if (array_key_exists($lang['iso_code'], $this->module_display_name)) {
-                $tab->name[$lang['id_lang']] = $this->module_display_name[$lang['iso_code']];
-            } else {
-                $tab->name[$lang['id_lang']] = $this->module_display_name['others'];
-            }
+        foreach (\Language::getLanguages(false) as $l) {
+            $tab->name[$l['id_lang']] = $l['iso_code'] == 'fr' ? $this->getFrenchTabName() : $this->getDefaultTabName();
         }
         $tab->class_name = $this->controller_name;
         $tab->module = $this->name;
-        $tab->id_parent = \Tab::getIdFromClassName('AdminPriceRule');
+        $tab->id_parent = -1;
+
         return $tab->save();
     }
 
@@ -146,6 +141,7 @@ class ModuleHiddenObjects extends \Module
                 return false;
             }
         }
+
         return true;
     }
 
@@ -155,9 +151,10 @@ class ModuleHiddenObjects extends \Module
     public function setModuleInFirst($hook_name): bool
     {
         $id_hook = \Hook::getIdByName($hook_name);
-        if ((int)$id_hook) {
+        if ((int) $id_hook) {
             return $this->updatePosition($id_hook, 0, 1);
         }
+
         return true;
     }
 
@@ -168,16 +165,16 @@ class ModuleHiddenObjects extends \Module
 
     public function generateIconSize($size, $icon)
     {
-        $src_file = $this->icons_dir . '64/icon-' . $icon . '.png';
-        $src_dist = $this->icons_dir . $size . '/icon-' . $icon . '.png';
-        $url_dist = $this->icons_path . $size . '/icon-' . $icon . '.png';
+        $src_file = $this->getIconsDir() . '64/icon-' . $icon . '.png';
+        $src_dist = $this->getIconsDir() . $size . '/icon-' . $icon . '.png';
+        $url_dist = $this->getIconsPath() . $size . '/icon-' . $icon . '.png';
         $base_path = \Tools::getShopDomainSsl(true);
 
         if (!file_exists($src_dist)) {
             if (
-                !is_dir($this->icons_dir . $size) ||
-                !is_writable($this->icons_dir . $size) ||
-                !\ImageManager::resize($src_file, $src_dist, $size, $size, 'png')
+                !is_dir($this->getIconsDir() . $size)
+                || !is_writable($this->getIconsDir() . $size)
+                || !\ImageManager::resize($src_file, $src_dist, $size, $size, 'png')
             ) {
                 return false;
             }
@@ -191,8 +188,8 @@ class ModuleHiddenObjects extends \Module
      */
     public function getContests()
     {
-        $id_shop = (int)\Context::getContext()->shop->id;
-        $id_lang = (int)\Context::getContext()->cookie->id_lang;
+        $id_shop = (int) \Context::getContext()->shop->id;
+        $id_lang = (int) \Context::getContext()->cookie->id_lang;
 
         $query = new \DbQuery();
         $query->select('a.*, b.*');
@@ -202,18 +199,11 @@ class ModuleHiddenObjects extends \Module
         $query->where('b.id_lang = ' . $id_lang);
         $query->where('a.active = 1');
         $query->where(HOTools::buildOrWhere(['NOW() BETWEEN date_start AND date_end', 'date_start = date_end']));
-        $query->where('('.$this->getRenewQuery().') < a.how_many');
+        $query->where('(' . $this->getRenewQuery() . ') < a.how_many');
         $contests = \Db::getInstance()->executeS($query);
 
         if (!$contests) {
             return false;
-        }
-
-        $class_name = $this->class_name;
-        $hoInstance = new $class_name();
-        foreach ($contests as &$contest) {
-            $hoInstance->id = $contest['id_hiddenobject'];
-            $contest['images'] = $hoInstance->getImages($id_lang);
         }
 
         return $contests;
@@ -222,10 +212,11 @@ class ModuleHiddenObjects extends \Module
     /**
      * @throws \PrestaShopException
      */
-    private function getRenewQuery() {
+    private function getRenewQuery()
+    {
         $query = new \DbQuery();
         $query->select('COUNT(id_hiddenobject)');
-        $query->from($this->getTable(), 'c');
+        $query->from($this->getTable() . '_founded', 'c');
         $query->where('c.id_hiddenobject = a.id_hiddenobject');
         $query->where('c.is_test = 0');
         $query->where('c.date > CASE
@@ -235,6 +226,7 @@ class ModuleHiddenObjects extends \Module
             ELSE 0000-00-00
             END'
         );
+
         return $query->build();
     }
 
@@ -250,7 +242,7 @@ class ModuleHiddenObjects extends \Module
         $query->select('a.*');
         $query->from($this->getTable(), 'a');
         $query->where('a.active = 1');
-        $query->where('a.id_shop = ' . (int)$context->shop->id);
+        $query->where('a.id_shop = ' . (int) $context->shop->id);
         $query->where(HOTools::buildOrWhere(['NOW() BETWEEN date_start AND date_end', 'date_start = date_end']));
 
         $orWhere = ['restriction = "none"'];
@@ -283,13 +275,13 @@ class ModuleHiddenObjects extends \Module
             }
 
             $query->leftJoin(
-                $this->getTable().'_founded',
+                $this->getTable() . '_founded',
                 'b',
                 'b.id_hiddenobject = a.id_hiddenobject AND b.is_test = 0 AND ' . HOTools::buildOrWhere($orWhere)
             );
 
             $query->where('b.id_hiddenobject IS NULL');
-            $query->where('('.$this->getRenewQuery().') < a.how_many');
+            $query->where('(' . $this->getRenewQuery() . ') < a.how_many');
         }
 
         $objects = \Db::getInstance()->executeS($query);
@@ -325,7 +317,7 @@ class ModuleHiddenObjects extends \Module
                             break;
                         }
                     } else {
-                        $product_cat = \Product::getProductCategories((int)\Tools::getValue('id_product'));
+                        $product_cat = \Product::getProductCategories((int) \Tools::getValue('id_product'));
                         if (!count(array_intersect($product_cat, $object['restriction_value']))) {
                             unset($objects[$key]);
                             break;
@@ -344,26 +336,26 @@ class ModuleHiddenObjects extends \Module
 
     public function getFoundedObjects()
     {
-        $id_shop = (int) Context::getContext()->shop->id;
-        $id_lang = (int) Context::getContext()->cookie->id_lang;
-        $id_customer = (int) Context::getContext()->cookie->id_customer;
-        $current_remote_address = ip2long(Tools::getRemoteAddr());
+        $id_shop = (int) \Context::getContext()->shop->id;
+        $id_lang = (int) \Context::getContext()->cookie->id_lang;
+        $id_customer = (int) \Context::getContext()->cookie->id_customer;
+        $current_remote_address = ip2long(\Tools::getRemoteAddr());
 
-        $objects = Db::getInstance()->executeS(
-            'SELECT b.icon, cr.code, crl.name FROM ' . _DB_PREFIX_ . $this->module_table . '_founded a
-            INNER JOIN ' . _DB_PREFIX_ . $this->module_table . ' b
-                ON a.id_hiddenobject = b.id_hiddenobject
-            INNER JOIN ' . _DB_PREFIX_ . 'cart_rule cr ON a.id_cart_rule = cr.id_cart_rule
-            INNER JOIN ' . _DB_PREFIX_ . 'cart_rule_lang crl
-                ON a.id_cart_rule = crl.id_cart_rule AND crl.id_lang = ' . (int) $id_lang . '
-            WHERE b.id_shop="' . (int) $id_shop . '" AND b.active=1 ' .
-            ($id_customer ?
-                'AND (a.id_customer=' . (int) $id_customer . ' OR ip_address="' . pSQL($current_remote_address) . '")' :
-                'AND ip_address="' . pSQL($current_remote_address) . '"'
-            ) . '
-            AND (NOW() BETWEEN cr.date_from AND cr.date_to)'
-        );
+        $query = new \DbQuery();
+        $query->select('b.icon, cr.code, crl.name');
+        $query->from($this->getTable() . '_founded', 'a');
+        $query->innerJoin($this->getTable(), 'b', 'a.id_hiddenobject = b.id_hiddenobject');
+        $query->innerJoin('cart_rule', 'cr', 'a.id_cart_rule = cr.id_cart_rule');
+        $query->innerJoin('cart_rule_lang', 'crl', 'a.id_cart_rule = crl.id_cart_rule AND crl.id_lang = ' . (int) $id_lang);
 
+        if ($id_customer) {
+            $orWhere = ['a.id_customer=' . (int) $id_customer, 'ip_address="' . pSQL($current_remote_address) . '"'];
+            $query->where(HOTools::buildOrWhere($orWhere));
+        } else {
+            $query->where('ip_address="' . pSQL($current_remote_address) . '"');
+        }
+        $query->where('NOW() BETWEEN cr.date_from AND cr.date_to');
+        $objects = \Db::getInstance()->executeS($query);
         if (!$objects) {
             return false;
         }
@@ -371,9 +363,9 @@ class ModuleHiddenObjects extends \Module
         return $objects;
     }
 
-    public function hookBackOfficeHeader()
+    public function hookDisplayBackOfficeHeader()
     {
-        if (\Tools::getValue('module_name') == $this->name) {
+        if (\Tools::getValue('module_name') == $this->getName()) {
             $this->context->controller->addJS($this->_path . 'views/js/back.js');
             $this->context->controller->addCSS($this->_path . 'views/css/back.css');
         }
@@ -386,54 +378,38 @@ class ModuleHiddenObjects extends \Module
     public function hookDisplayHeader()
     {
         $this->context->controller->addJqueryPlugin('fancybox');
-        $this->context->controller->addJS($this->_path . 'views/js/global.js');
-        $this->context->controller->addCSS($this->_path . 'views/css/global.css');
+        $this->context->controller->addJS($this->getLocalPath() . 'views/js/global.js');
+        $this->context->controller->addCSS($this->getLocalPath() . 'views/css/global.css');
 
         $object = $this->areYouLucky();
         if (!isset($object['id_hiddenobject']) || !(int) $object['id_hiddenobject']) {
             return '';
         }
 
-        $this->context->controller->addJS($this->_path . '/views/js/front.js');
-        $this->context->controller->addCSS($this->_path . '/views/css/front.css');
+        $this->context->controller->addJS($this->getLocalPath() . 'views/js/front.js');
+        $this->context->controller->addJS($this->getLocalPath() . 'assets/js/front.' . \Tools::strtolower($this->getPrefix()) . '.js');
+        $this->context->controller->addCSS($this->getLocalPath() . 'views/css/front.css');
         $token = \Tools::encrypt((int) $object['id_hiddenobject'] . '|' . date('YmdH') . '|' . $this->id);
 
-        $object['icon_url'] = $this->generateIconSize((int) $object['size'], (int) $object['icon']);
-        if (!$object['icon_url']) {
+        $icon_url = $this->generateIconSize((int) $object['size'], (int) $object['icon']);
+        if (!$icon_url) {
             return false;
         }
 
-        $object['icon_link'] = $this->context->link->getModuleLink(
+        $icon_link = $this->context->link->getModuleLink(
             $this->name,
             'found',
-            ['id' => (int)$object['id_hiddenobject'], 'token' => $token,]
+            ['id' => (int) $object['id_hiddenobject'], 'token' => $token]
         );
 
-        $this->context->smarty->assign([
-            'object' => $object,
-            'display' => \Configuration::get($this->getPrefix() . 'HIDDENOBJECTS_DISPLAY'),
-            'selector' => \Configuration::get($this->getPrefix() . 'HIDDENOBJECTS_SELECTOR'),
-            'email_support' => \Configuration::get('PS_SHOP_EMAIL'),
+        \Media::addJsDef([
+            \Tools::strtolower($this->getPrefix()) . 'HiddenObjectUrl' => $icon_url,
+            \Tools::strtolower($this->getPrefix()) . 'HiddenObjectSize' => (int) $object['size'],
+            \Tools::strtolower($this->getPrefix()) . 'HiddenObjectLink' => $icon_link,
+            \Tools::strtolower($this->getPrefix()) . 'HiddenObjectUseEffect' => (int) $object['use_effect'],
+            \Tools::strtolower($this->getPrefix()) . 'HiddenObjectSelector' => \Configuration::get($this->getPrefix() . 'HIDDENOBJECTS_SELECTOR'),
+            'hiddenObjectFancyboxError' => $this->l('An error occured. Please contact us if necessary.'),
         ]);
-
-        return $this->display($this->getFileName(), 'views/templates/front/hook/header.tpl');
-    }
-
-    /**
-     * @throws \PrestaShopException
-     */
-    public function hookDisplayRightColumn()
-    {
-        return $this->hookDisplayLeftColumn();
-    }
-
-    /**
-     * @throws \PrestaShopException
-     */
-    public function hookDisplayLeftColumn()
-    {
-        $this->assignSmartyVariables();
-        return $this->display($this->getFileName(), 'views/templates/front/hook/column.tpl');
     }
 
     private function getFileName(): string
@@ -459,24 +435,6 @@ class ModuleHiddenObjects extends \Module
         ]);
     }
 
-    /**
-     * @throws \PrestaShopException
-     */
-    public function hookDisplayHome()
-    {
-        $this->assignSmartyVariables();
-        return $this->display($this->getFileName(), 'views/templates/front/hook/home.tpl');
-    }
-
-    /**
-     * @throws \PrestaShopException
-     */
-    public function hookDisplayFooter()
-    {
-        $this->assignSmartyVariables();
-        return $this->display($this->getFileName(), 'views/templates/front/hook/footer.tpl');
-    }
-
     public function hookDisplayShoppingCartFooter()
     {
         $objects = $this->getFoundedObjects();
@@ -492,7 +450,8 @@ class ModuleHiddenObjects extends \Module
         }
 
         $this->smarty->assign('objects', $objects);
-        return $this->display($this->getFileName(), 'views/templates/front/hook/shopping-cart.tpl');
+
+        return $this->display($this->getFileName(), 'views/templates/front/shopping-cart.tpl');
     }
 
     public function getRestrictionsValues(): array
@@ -507,17 +466,150 @@ class ModuleHiddenObjects extends \Module
         ];
     }
 
-    public function getRenewValues(): array {
+    public function getRenewValues(): array
+    {
         return [
-            ['value' => 'none', 'label' => $this->l('Do not renew', 'modulehiddenobjects')],
-            ['value' => 'daily', 'label' => $this->l('Every day', 'modulehiddenobjects')],
-            ['value' => 'weekly', 'label' => $this->l('Every week', 'modulehiddenobjects')],
-            ['value' => 'monthly', 'label' => $this->l('Every month', 'modulehiddenobjects')],
+            ['value' => 'none', 'label' => ''],
+            ['value' => 'daily', 'label' => $this->l('Per day', 'modulehiddenobjects')],
+            ['value' => 'weekly', 'label' => $this->l('Per week', 'modulehiddenobjects')],
+            ['value' => 'monthly', 'label' => $this->l('Per month', 'modulehiddenobjects')],
         ];
+    }
+
+    public function getRenewLabelByValue(string $v): string
+    {
+        foreach ($this->getRenewValues() as $value) {
+            if ($value['value'] == $v) {
+                return $value['label'];
+            }
+        }
     }
 
     public function getLangTable(): string
     {
-        return $this->getTable().'_lang';
+        return $this->getTable() . '_lang';
+    }
+
+    public function getAssetsPath(): string
+    {
+        return $this->getLocalPath() . 'vendor/adilis/hiddenobjects/src/Assets/';
+    }
+
+    public function copyAssets(): bool
+    {
+        if (
+            (is_dir($this->getLocalPath() . 'views/') && !\Tools::deleteDirectory($this->getLocalPath() . 'views/'))
+            || (is_dir($this->getLocalPath() . 'img/') && !\Tools::deleteDirectory($this->getLocalPath() . 'img/'))
+            || (is_dir($this->getLocalPath() . 'translations/') && !\Tools::deleteDirectory($this->getLocalPath() . 'translations/'))
+        ) {
+            return false;
+        }
+
+        \Tools::recurseCopy($this->getAssetsPath() . 'views/', $this->getLocalPath() . 'views/');
+        \Tools::recurseCopy($this->getAssetsPath() . 'translations/', $this->getLocalPath() . 'translations/');
+
+        $files = \Tools::scandir(
+            $this->getLocalPath(),
+            'tpl',
+            'views',
+            true
+        );
+        $files = array_merge($files, \Tools::scandir(
+            $this->getLocalPath(),
+            'php',
+            'translations',
+            true)
+        );
+
+        foreach ($files as $file) {
+            $content = \Tools::file_get_contents($this->getLocalPath() . $file);
+            $content = str_replace('[[MODULENAME]]', $this->name, $content);
+            @file_put_contents($this->getLocalPath() . $file, $content);
+        }
+        
+        return true;
+    }
+
+    public function getIconsPath(): string
+    {
+        return $this->getPathUri() . 'assets/icons/';
+    }
+
+    public function getIconsDir(): string
+    {
+        return $this->getLocalPath() . 'assets/icons/';
+    }
+
+    public function getClassName(): string
+    {
+        return $this->getPrefix() . 'HiddenObject';
+    }
+
+    public function getDisplayName(): string
+    {
+        return sprintf($this->l('Hidden objects game : %s'), $this->getTheme());
+    }
+
+    public function getDescription(): string
+    {
+        return sprintf($this->l('Hide objects on your shop for %s'), $this->getTheme());
+    }
+
+    public function getDefaultTabName(): string
+    {
+        return sprintf('Hidden objects game : %s', $this->getTheme());
+    }
+
+    public function getFrenchTabName(): string
+    {
+        return sprintf('Jeu des objets cachés : %s', $this->getTheme());
+    }
+
+    protected static function loadUpgradeVersionList($module_name, $module_version, $registered_version)
+    {
+        $list = [];
+
+        $upgrade_path = _PS_MODULE_DIR_ . '' . $module_name . '/vendor/adilis/hiddenobjects/src/Upgrades/';
+        // Check if folder exist and it could be read
+        if (file_exists($upgrade_path) && ($files = scandir($upgrade_path, SCANDIR_SORT_NONE))) {
+            // Read each file name
+            foreach ($files as $file) {
+                if (!in_array($file, ['.', '..', '.svn', 'index.php']) && preg_match('/\.php$/', $file)) {
+                    $tab = explode('-', $file);
+
+                    if (!isset($tab[1])) {
+                        continue;
+                    }
+
+                    $file_version = basename($tab[1], '.php');
+                    // Compare version, if minor than actual, we need to upgrade the module
+                    if (count($tab) == 2 &&
+                        (\Tools::version_compare($file_version, $module_version, '<=') &&
+                            \Tools::version_compare($file_version, $registered_version, '>'))) {
+                        $list[] = [
+                            'file' => $upgrade_path . $file,
+                            'version' => $file_version,
+                            'upgrade_function' => [
+                                'upgrade_module_' . str_replace('.', '_', $file_version),
+                                'upgradeModule' . str_replace('.', '', $file_version), ],
+                        ];
+                    }
+                }
+            }
+        }
+
+        // No files upgrade, then upgrade succeed
+        if (count($list) == 0) {
+            static::$modules_cache[$module_name]['upgrade']['success'] = true;
+            \Module::upgradeModuleVersion($module_name, $module_version);
+        }
+
+        usort($list, 'ps_module_version_sort');
+
+        // Set the list to module cache
+        static::$modules_cache[$module_name]['upgrade']['upgrade_file_left'] = $list;
+        static::$modules_cache[$module_name]['upgrade']['available_upgrade'] = count($list);
+
+        return (bool) count($list);
     }
 }

@@ -12,13 +12,14 @@
 
 namespace Adilis\HiddenObjects\Sql;
 
-class TableInstaller {
-
+class TableInstaller
+{
     private $table = '';
 
     public function setTable($table): TableInstaller
     {
         $this->table = $table;
+
         return $this;
     }
 
@@ -77,7 +78,7 @@ class TableInstaller {
             KEY `id_shop` (`id_shop`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.$this->getTable().'_founded` (
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . $this->getTable() . '_founded` (
           `id_hiddenobject_founded` int(11) unsigned NOT NULL AUTO_INCREMENT,
           `id_hiddenobject` int(11) NOT NULL,
           `id_guest` int(11) unsigned NOT NULL,
@@ -89,22 +90,22 @@ class TableInstaller {
           PRIMARY KEY (`id_hiddenobject_founded`),
           KEY `id_hiddenobject` (`id_hiddenobject`),
           KEY `id_guest` (`id_guest`)
-        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.$this->getTable().'_lang` (
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . $this->getTable() . '_lang` (
           `id_hiddenobject` int(10) unsigned NOT NULL,
           `id_lang` int(10) unsigned NOT NULL,
           `name` varchar(128) NOT NULL DEFAULT \'\',
           `message_end` text,
-          `rules` text,
           PRIMARY KEY (`id_hiddenobject`,`id_lang`)
-        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
         foreach ($sql as $query) {
             if (!\Db::getInstance()->execute($query)) {
                 return false;
             }
         }
+
         return true;
     }
 }

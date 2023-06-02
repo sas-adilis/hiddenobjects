@@ -1,0 +1,47 @@
+    /**
+ * 2016 Adilis
+ *
+ * Make your shop interactive for Easter: hide objects and ask your customers to find them in order to win a
+ * discount coupon. Make your brand stand out by offering an original game: a treasure hunt throughout your products.
+ *
+ *  @author    Adilis <support@adilis.fr>
+ *  @copyright 2016 SAS Adilis
+ *  @license   http://www.adilis.fr
+ */
+
+.display_hiddenobject_vouchers {
+    background: #fbfbfb;
+    border: 1px solid #d6d4d4;
+    padding: 14px 18px 13px;
+    margin: 10px 0 30px 0;
+    line-height: 23px;
+    clear: left;
+    color:#000
+}
+
+.display_hiddenobject_vouchers_title {
+    font-family: "Open Sans", sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #555454;
+    font-size: 18px;
+    padding: 0 0 15px;
+    line-height: normal;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #d6d4d4;
+    margin-top: 0;
+}
+
+.display_hiddenobject_vouchers strong {
+    cursor: pointer;
+}
+
+.display_hiddenobject_vouchers_item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.display_hiddenobject_vouchers_item + .display_hiddenobject_vouchers_item {
+    margin-top: .25rem;
+}

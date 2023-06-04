@@ -8,8 +8,6 @@ interface ModuleHiddenObjectsInterface
 
     public function getTable(): string;
 
-    public function getModuleKey(): string;
-
     public function getName(): string;
 
     public function getDisplayName(): string;
@@ -19,4 +17,6 @@ interface ModuleHiddenObjectsInterface
     public function getDefaultTabName(): string;
 
     public function getFrenchTabName(): string;
+
+    public function getTheme(): string;
 }

@@ -39,7 +39,6 @@ class ModuleHiddenObjects extends \Module
         $this->version = '2.0.0';
         $this->need_instance = 0;
         $this->bootstrap = true;
-        $this->module_key = $this->getModuleKey();
         $this->ps_versions_compliancy = ['min' => '1.6.1', 'max' => _PS_VERSION_];
         $this->author = 'Adilis';
         $this->tab = 'pricing_promotion';
@@ -612,5 +611,10 @@ class ModuleHiddenObjects extends \Module
         static::$modules_cache[$module_name]['upgrade']['available_upgrade'] = count($list);
 
         return (bool) count($list);
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }

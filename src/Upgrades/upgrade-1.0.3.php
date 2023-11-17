@@ -12,11 +12,11 @@
 function upgrade_module_1_0_3()
 {
     $sql = [];
-    $sql[] =
-        'ALTER TABLE `' . _DB_PREFIX_ . 'hiddenobjects_ea`
+    $sql[]
+        = 'ALTER TABLE `' . _DB_PREFIX_ . 'hiddenobjects_ea`
         CHANGE `cart_rule_date_to` `cart_rule_date_to` INT(6) NOT NULL DEFAULT "7";';
-    $sql[] =
-        'UPDATE `' . _DB_PREFIX_ . 'hiddenobjects_ea` SET `cart_rule_date_to` = 7
+    $sql[]
+        = 'UPDATE `' . _DB_PREFIX_ . 'hiddenobjects_ea` SET `cart_rule_date_to` = 7
         WHERE `cart_rule_date_to` >= "2015";';
 
     foreach ($sql as $query) {

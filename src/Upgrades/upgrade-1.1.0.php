@@ -12,8 +12,8 @@
 function upgrade_module_1_1()
 {
     $sql = [];
-    $sql[] =
-        'ALTER TABLE `' . _DB_PREFIX_ . 'hiddenobjects_ea_founded`
+    $sql[]
+        = 'ALTER TABLE `' . _DB_PREFIX_ . 'hiddenobjects_ea_founded`
         ADD `is_test` BOOL(1) NOT NULL DEFAULT "0" AFTER `ip_address`;';
 
     foreach ($sql as $query) {

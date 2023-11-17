@@ -225,8 +225,8 @@ class AdminHiddenObjectsController extends \ModuleAdminController
         $this->identifier .= '_founded';
         $this->actions = $this->bulk_actions = [];
         $this->list_no_link = true;
-        $this->_select =
-            'cr.code as cart_rule_code,
+        $this->_select
+            = 'cr.code as cart_rule_code,
             IF(c.id_customer IS NULL,
                 CONCAT("' . pSQL($this->l('Guest')) . ' #", a.`id_guest`),
                 CONCAT(LEFT(c.`firstname`, 1), \'. \', c.`lastname`)
@@ -299,8 +299,8 @@ class AdminHiddenObjectsController extends \ModuleAdminController
                         foreach ($this->object->restriction_value as $id_product) {
                             $product = new \Product($id_product, false, $this->context->cookie->id_lang);
                             if (\Validate::isLoadedObject($product)) {
-                                $product_name = $product->reference ?
-                                $product->reference . ' : ' . $product->name : $product->name;
+                                $product_name = $product->reference
+                                ? $product->reference . ' : ' . $product->name : $product->name;
                                 $only_products[] = ['id_product' => $product->id, 'name' => $product_name];
                             }
                         }

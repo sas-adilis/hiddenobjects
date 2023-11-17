@@ -44,6 +44,7 @@ return (new PhpCsFixer\Config())
         'yoda_style' => false,
         'single_line_throw' => false,
         'no_alias_language_construct_call' => false,
+        'operator_linebreak' => true
     ])
     ->setFinder($finder)
     ->setCacheFile(__DIR__.'/.php_cs.cache');

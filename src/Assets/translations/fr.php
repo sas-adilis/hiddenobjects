@@ -145,3 +145,4 @@ $_MODULE['<{[[MODULENAME]]}prestashop>cart-rule_2f73d13f0a878086ce1f9933aed3ac80
 $_MODULE['<{[[MODULENAME]]}prestashop>cart-rule_c5f17f7ca53d9225478fdbfd0a5583ac'] = 'Rechercher un produit';
 $_MODULE['<{[[MODULENAME]]}prestashop>cart-rule_635c8dcb5a9c7f405ebf10ee3351a158'] = 'Produits';
 $_MODULE['<{[[MODULENAME]]}prestashop>cart-rule_34b9126c1ba9f3b131875a8da7b426c4'] = 'Déclinaisons';
+$_MODULE['<{[[MODULENAME]]}prestashop>modulehiddenobjects_81b616fbff55b8698d44852f45c08630'] = 'Nöel';
